@@ -1,0 +1,23 @@
+# Nushell specific files to ignore
+history.txt
+logs/
+plugin.msgpackz
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.backup
+*.bak
+
+# Personal/sensitive files
+*.env
+.env.*
