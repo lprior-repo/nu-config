@@ -39,7 +39,8 @@ A comprehensive Nushell configuration with multiple intelligent completion engin
 
 ### Quick Install
 ```bash
-curl -sSL https://raw.githubusercontent.com/your-username/nu-config/main/install.sh | bash
+# Download and run the Nushell installation script
+curl -sSL https://raw.githubusercontent.com/lprior-repo/nu-config/main/install.nu | nu
 ```
 
 ### Manual Installation
@@ -59,7 +60,7 @@ curl -sSL https://raw.githubusercontent.com/your-username/nu-config/main/install
 
 2. **Clone and Setup Config:**
    ```bash
-   git clone https://github.com/your-username/nu-config.git ~/.config/nushell
+   git clone https://github.com/lprior-repo/nu-config.git ~/.config/nushell
    
    # Register plugins  
    nu -c "plugin add ~/.cargo/bin/nu_plugin_highlight; plugin add ~/.cargo/bin/nu_plugin_hcl; plugin add ~/.cargo/bin/nu_plugin_query; plugin add ~/.cargo/bin/nu_plugin_polars; plugin add ~/.cargo/bin/nu_plugin_formats"
