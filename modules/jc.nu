@@ -1,0 +1,1 @@
+# JC module - placeholder for JSON conversion utilities
