@@ -52,7 +52,7 @@ def main [] {
     
     # Install Nushell plugins
     log_info "Installing Nushell plugins..."
-    ^cargo install nu_plugin_highlight nu_plugin_hcl nu_plugin_query
+    ^cargo install nu_plugin_highlight nu_plugin_hcl nu_plugin_query nu_plugin_polars nu_plugin_formats nu_plugin_gstat nu_plugin_inc
     log_success "Nushell plugins installed"
     
     # Backup existing Nushell config
@@ -73,7 +73,12 @@ def main [] {
         plugin add ~/.cargo/bin/nu_plugin_highlight
         plugin add ~/.cargo/bin/nu_plugin_hcl  
         plugin add ~/.cargo/bin/nu_plugin_query
-        log_success "Plugins registered"
+        plugin add ~/.cargo/bin/nu_plugin_polars
+        plugin add ~/.cargo/bin/nu_plugin_formats
+        # Note: gstat and inc may have compatibility issues with some Nushell versions
+        try { plugin add ~/.cargo/bin/nu_plugin_gstat } catch { log_warning "gstat plugin registration failed - version compatibility issue" }
+        try { plugin add ~/.cargo/bin/nu_plugin_inc } catch { log_warning "inc plugin registration failed - version compatibility issue" }
+        log_success "Core plugins registered"
     } catch {
         log_warning "Plugin registration failed - you may need to do this manually"
     }

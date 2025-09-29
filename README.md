@@ -20,7 +20,11 @@ A comprehensive Nushell configuration with multiple intelligent completion engin
 ### 🔌 Plugins
 - **nu_plugin_highlight** - Syntax highlighting for various file formats
 - **nu_plugin_hcl** - HCL (HashiCorp Configuration Language) support
-- **nu_plugin_query** - Advanced querying capabilities for JSON, XML, HTML
+- **nu_plugin_query** - Advanced querying capabilities for JSON, XML, HTML, SQL
+- **nu_plugin_polars** - Extremely fast columnar operations using DataFrames
+- **nu_plugin_formats** - Support for EML, ICS, INI, plist, and VCF formats
+- **nu_plugin_gstat** - Git repository status as structured data
+- **nu_plugin_inc** - Increment values and versions (e.g., semver)
 
 ### 🎨 UI Enhancements
 - Dark theme with syntax highlighting
@@ -50,15 +54,15 @@ curl -sSL https://raw.githubusercontent.com/your-username/nu-config/main/install
    npm install -g @microsoft/inshellisense@0.0.1-rc.21
    
    # Install Nushell plugins
-   cargo install nu_plugin_highlight nu_plugin_hcl nu_plugin_query
+   cargo install nu_plugin_highlight nu_plugin_hcl nu_plugin_query nu_plugin_polars nu_plugin_formats nu_plugin_gstat nu_plugin_inc
    ```
 
 2. **Clone and Setup Config:**
    ```bash
    git clone https://github.com/your-username/nu-config.git ~/.config/nushell
    
-   # Register plugins
-   nu -c "plugin add ~/.cargo/bin/nu_plugin_highlight; plugin add ~/.cargo/bin/nu_plugin_hcl; plugin add ~/.cargo/bin/nu_plugin_query"
+   # Register plugins  
+   nu -c "plugin add ~/.cargo/bin/nu_plugin_highlight; plugin add ~/.cargo/bin/nu_plugin_hcl; plugin add ~/.cargo/bin/nu_plugin_query; plugin add ~/.cargo/bin/nu_plugin_polars; plugin add ~/.cargo/bin/nu_plugin_formats"
    ```
 
 3. **Start Nushell:**
