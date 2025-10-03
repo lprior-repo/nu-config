@@ -1182,6 +1182,318 @@ def --env hd-login [
 alias awsl = aws-login
 alias aws-select = select-aws-profile
 
+# =============================================================================
+# GITHUB ACTIONS AUTOMATION
+# =============================================================================
+# Quick commands to check GitHub Actions status after pushing commits
+
+# Check the latest GitHub Actions run status
+def gh-status [] {
+    print "🔍 Checking latest GitHub Actions run..."
+    
+    # Check if we're in a git repo
+    try {
+        git rev-parse --is-inside-work-tree | ignore
+    } catch {
+        print "❌ Not in a Git repository"
+        return
+    }
+    
+    # Check if GitHub CLI is authenticated
+    try {
+        gh auth status | ignore
+    } catch {
+        print "❌ GitHub CLI not authenticated. Run: gh auth login"
+        return
+    }
+    
+    # Get the latest run
+    let runs = try {
+        gh run list --limit 1 --json status,conclusion,workflowName,createdAt,headBranch,event,url | from json
+    } catch { |e|
+        print $"❌ Error fetching runs: ($e.msg)"
+        print "💡 Make sure this repository has GitHub Actions workflows"
+        return
+    }
+    
+    if ($runs | is-empty) {
+        print "❌ No workflow runs found"
+        print "💡 This repository might not have GitHub Actions set up"
+        print "   Add a .github/workflows/ directory with YAML workflow files"
+        return
+    }
+    
+    let latest_run = ($runs | first)
+    
+    # Display status with colors
+    let status_icon = match $latest_run.status {
+        "completed" => (match $latest_run.conclusion {
+            "success" => "✅"
+            "failure" => "❌"
+            "cancelled" => "⏹️"
+            _ => "❓"
+        })
+        "in_progress" => "🔄"
+        "queued" => "⏳"
+        _ => "❓"
+    }
+    
+    print $"($status_icon) Workflow: (ansi cyan)($latest_run.workflowName)(ansi reset)"
+    print $"   Status: ($latest_run.status) ($latest_run.conclusion?)"
+    print $"   Branch: (ansi green)($latest_run.headBranch)(ansi reset)"
+    print $"   Event: ($latest_run.event)"
+    print $"   Started: ($latest_run.createdAt)"
+    print $"   URL: (ansi blue)($latest_run.url)(ansi reset)"
+    
+    $latest_run
+}
+
+# Watch the latest run in real-time (great for after git push)
+def gh-watch [] {
+    print "👀 Watching latest GitHub Actions run..."
+    gh run watch
+}
+
+# Get status of last run for current branch
+def gh-branch-status [] {
+    let current_branch = (git branch --show-current)
+    print $"🌿 Checking GitHub Actions for branch: (ansi green)($current_branch)(ansi reset)"
+    
+    gh run list --branch $current_branch --limit 3 --json status,conclusion,workflowName,createdAt,url 
+    | from json 
+    | each { |run|
+        let status_icon = match $run.status {
+            "completed" => (match $run.conclusion {
+                "success" => "✅"
+                "failure" => "❌"
+                "cancelled" => "⏹️"
+                _ => "❓"
+            })
+            "in_progress" => "🔄"
+            "queued" => "⏳"
+            _ => "❓"
+        }
+        {
+            icon: $status_icon
+            workflow: $run.workflowName
+            status: $run.status
+            conclusion: ($run.conclusion | default "")
+            started: $run.createdAt
+            url: $run.url
+        }
+    }
+}
+
+# Show failing runs with logs
+def gh-failures [] {
+    print "💥 Checking for failed GitHub Actions runs..."
+    
+    let failed_runs = (gh run list --status failure --limit 5 --json workflowName,createdAt,url,headBranch | from json)
+    
+    if ($failed_runs | is-empty) {
+        print "🎉 No recent failures found!"
+        return
+    }
+    
+    print $"Found ($failed_runs | length) recent failures:"
+    
+    $failed_runs | each { |run|
+        print $"❌ ($run.workflowName) on ($run.headBranch) - ($run.createdAt)"
+        print $"   URL: ($run.url)"
+    }
+}
+
+# Quick push and check workflow (the ultimate combo!)
+def git-push-check [
+    ...args  # Pass any git push arguments
+] {
+    print "🚀 Pushing changes and checking workflow..."
+    
+    # Push the changes
+    if ($args | is-empty) {
+        git push
+    } else {
+        git push ...$args
+    }
+    
+    # Wait a moment for GitHub to register the push
+    sleep 3sec
+    
+    # Check the status
+    gh-status
+    
+    # Ask if user wants to watch
+    print "\n💡 Want to watch the run in real-time? (y/n)"
+    let answer = (input)
+    if ($answer | str downcase | str starts-with "y") {
+        gh-watch
+    }
+}
+
+# Check PR status (if in a PR branch)
+def gh-pr-status [] {
+    print "🔀 Checking PR status..."
+    
+    try {
+        gh pr status --json statusCheckRollup,title,url | from json | each { |pr|
+            print $"📋 PR: (ansi cyan)($pr.title)(ansi reset)"
+            print $"   URL: (ansi blue)($pr.url)(ansi reset)"
+            
+            if ("statusCheckRollup" in ($pr | columns)) and ($pr.statusCheckRollup | is-not-empty) {
+                print "   Checks:"
+                $pr.statusCheckRollup | each { |check|
+                    let status_icon = match $check.state {
+                        "SUCCESS" => "✅"
+                        "FAILURE" => "❌"
+                        "PENDING" => "🔄"
+                        "ERROR" => "💥"
+                        _ => "❓"
+                    }
+                    print $"     ($status_icon) ($check.name)"
+                }
+            }
+        }
+    } catch {
+        print "ℹ️  Not in a PR branch or no PR found"
+    }
+}
+
+# Setup a basic GitHub Actions workflow
+def gh-setup-workflow [
+    name: string = "CI"  # Workflow name
+    --node               # Setup Node.js workflow
+    --python             # Setup Python workflow
+    --generic            # Setup generic workflow
+] {
+    print "⚙️ Setting up GitHub Actions workflow..."
+    
+    # Create .github/workflows directory
+    mkdir .github/workflows
+    
+    let workflow_content = if $node {
+        "name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test"
+    } else if $python {
+        "name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    
+    - name: Test with pytest
+      run: pytest"
+    } else {
+        "name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run build
+      run: echo 'Add your build steps here!'
+    
+    - name: Run tests
+      run: echo 'Add your test commands here!'"
+    }
+    
+    let filename = $".github/workflows/($name | str downcase | str replace ' ' '-').yml"
+    $workflow_content | save $filename
+    
+    print $"✅ Created workflow file: (ansi green)($filename)(ansi reset)"
+    print "💡 Edit the file to customize your build and test steps"
+    print "🚀 Commit and push to trigger your first workflow run!"
+}
+
+# Quick commit, push, and check (the ultimate developer workflow!)
+def commit-push-check [
+    message: string  # Commit message
+    ...files        # Files to add (optional, defaults to all)
+] {
+    print $"📝 Committing with message: '($message)'"
+    
+    # Add files
+    if ($files | is-empty) {
+        git add .
+    } else {
+        git add ...$files
+    }
+    
+    # Commit
+    git commit -m $message
+    
+    # Push and check
+    git-push-check
+}
+
+# GitHub Actions aliases for quick access
+alias ghs = gh-status
+alias ghw = gh-watch
+alias ghb = gh-branch-status
+alias ghf = gh-failures
+alias gpc = git-push-check
+alias ghpr = gh-pr-status
+alias ghsetup = gh-setup-workflow
+alias cpc = commit-push-check
+
 source ~/.cache/carapace/init.nu
 use ~/.cache/starship/init.nu
 source ~/.cache/zoxide/init.nu
