@@ -973,8 +973,8 @@ $env.config = {
     ]   
 }
 
-# AWS Login - Source the fixed AWS authentication system
-source ~/.config/nushell/aws-login-fixed.nu
+# AWS Authentication - Complete system with SSO, profiles, and credential management
+source ~/.config/nushell/aws-auth-complete.nu
 
 source ~/.cache/carapace/init.nu
 use ~/.cache/starship/init.nu
@@ -997,13 +997,6 @@ source ~/.config/nushell/git-aliases.nu
 
 # Load zoxide menu
 source ~/.config/nushell/zoxide-menu.nu
-
-# Fuzzy modules removed - were empty placeholders
-
-# Load AWS modules
-use ~/.config/nushell/modules/select-aws-profile.nu *
-
-# AWS Login script is already sourced above
 
 # Load jc module
 use ~/.config/nushell/modules/jc.nu *

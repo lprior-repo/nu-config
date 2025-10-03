@@ -1,8 +1,29 @@
 #!/usr/bin/env nu
-# Fixed AWS Nushell Login - Environment variable scoping solution
-# This version properly exports credentials to the parent shell
+# Complete AWS Authentication System for Nushell
+# 
+# This script provides comprehensive AWS authentication functionality including:
+# - Regular profile login
+# - AWS SSO authentication  
+# - Temporary credential generation
+# - Interactive profile selection with fzf
+# - Credential management (status, clearing)
+# - Profile listing and discovery
+#
+# All functions use --env to properly export credentials to the calling shell
+#
+# Usage:
+#   aws-login [profile] [--sso] [--temp]     # Main login function
+#   aws-profiles                             # List available profiles
+#   aws-status                               # Show current credential status
+#   aws-clear                                # Clear all AWS credentials
+#   select-aws-profile [--sso]               # Interactive profile selection
+#   awsl                                     # Short alias for aws-login
 
-# Export AWS credentials using AWS CLI export-credentials command
+# =============================================================================
+# CORE AWS AUTHENTICATION FUNCTIONS
+# =============================================================================
+
+# Main AWS login function with SSO and temporary credential support
 export def --env aws-login [
     profile: string = "default"  # AWS profile to use
     --sso                        # Use AWS SSO login
@@ -82,7 +103,53 @@ export def --env aws-login [
     }
 }
 
-# Clear AWS credentials
+# =============================================================================
+# INTERACTIVE PROFILE SELECTION
+# =============================================================================
+
+# Interactive AWS profile selector with fzf integration
+export def --env select-aws-profile [
+    --sso   # Use SSO login for the selected profile
+] {
+    # Check if fzf is available
+    if not (which fzf | is-not-empty) {
+        print "❌ fzf is required for interactive profile selection"
+        print "💡 Install fzf or use: aws-login <profile-name>"
+        return
+    }
+    
+    # Get available profiles
+    let profiles = (aws-profiles)
+    
+    if ($profiles | is-empty) {
+        print "❌ No AWS profiles found"
+        print "💡 Configure profiles with: aws configure"
+        return
+    }
+    
+    # Use fzf to select a profile
+    let selected_profile = ($profiles | str join "\n" | fzf --prompt "Select AWS Profile: ")
+    
+    if ($selected_profile | str trim | str length) == 0 {
+        print "❌ No profile selected"
+        return
+    }
+    
+    # Use the aws-login system
+    if $sso {
+        print $"🔐 Using SSO login for profile: (ansi cyan)($selected_profile)(ansi reset)"
+        aws-login $selected_profile --sso
+    } else {
+        print $"🔐 Logging in with profile: (ansi cyan)($selected_profile)(ansi reset)"
+        aws-login $selected_profile
+    }
+}
+
+# =============================================================================
+# CREDENTIAL MANAGEMENT FUNCTIONS
+# =============================================================================
+
+# Clear all AWS credentials from environment
 export def --env aws-clear [] {
     let aws_vars = ["AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY" "AWS_SESSION_TOKEN" "AWS_PROFILE" "AWS_DEFAULT_REGION" "AWS_REGION"]
     
@@ -95,7 +162,7 @@ export def --env aws-clear [] {
     print "🧹 AWS credentials cleared"
 }
 
-# Show current AWS status
+# Show current AWS credential status
 export def aws-status [] {
     print "📊 Current AWS Status:"
     print $"   Profile: (ansi green)($env.AWS_PROFILE? | default 'not set')(ansi reset)"
@@ -113,7 +180,7 @@ export def aws-status [] {
     }
 }
 
-# List available profiles
+# List all available AWS profiles from credentials and config files
 export def aws-profiles [] {
     let creds_file = "~/.aws/credentials" | path expand
     let config_file = "~/.aws/config" | path expand
@@ -139,5 +206,12 @@ export def aws-profiles [] {
     $profiles | uniq | sort
 }
 
-# Aliases
+# =============================================================================
+# CONVENIENCE ALIASES
+# =============================================================================
+
+# Short alias for aws-login
 export alias awsl = aws-login
+
+# Alias for interactive selection
+export alias aws-select = select-aws-profile
