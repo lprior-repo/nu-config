@@ -998,9 +998,7 @@ source ~/.config/nushell/git-aliases.nu
 # Load zoxide menu
 source ~/.config/nushell/zoxide-menu.nu
 
-# Load fuzzy modules
-use ~/.config/nushell/modules/fuzzy-1.nu *
-use ~/.config/nushell/modules/fuzzy-2.nu *
+# Fuzzy modules removed - were empty placeholders
 
 # Load AWS modules
 use ~/.config/nushell/modules/select-aws-profile.nu *
