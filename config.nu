@@ -973,8 +973,8 @@ $env.config = {
     ]   
 }
 
-# AWS Login - Source the complete AWS authentication system
-source /home/family/src/aws-nushell-login/aws-login.nu
+# AWS Login - Source the fixed AWS authentication system
+source ~/.config/nushell/aws-login-fixed.nu
 
 source ~/.cache/carapace/init.nu
 use ~/.cache/starship/init.nu
@@ -1005,8 +1005,7 @@ use ~/.config/nushell/modules/fuzzy-2.nu *
 # Load AWS modules
 use ~/.config/nushell/modules/select-aws-profile.nu *
 
-# Load AWS Login script
-source ~/src/aws-nushell-login/aws-login.nu
+# AWS Login script is already sourced above
 
 # Load jc module
 use ~/.config/nushell/modules/jc.nu *
@@ -1015,3 +1014,14 @@ use ~/.config/nushell/modules/jc.nu *
 if $env.ZELLIJ? == null {
     zellij
 }
+
+# IntelliShell
+$env.INTELLI_HOME = "/home/family/.local/share/intelli-shell"
+$env.PATH = ($env.PATH | prepend "/home/family/.local/share/intelli-shell/bin")
+# $env.INTELLI_SEARCH_HOTKEY = "control space"
+# $env.INTELLI_VARIABLE_HOTKEY = "control char_l"
+# $env.INTELLI_BOOKMARK_HOTKEY = "control char_b"
+# $env.INTELLI_FIX_HOTKEY = "control char_x"
+# alias is = intelli-shell
+mkdir ($nu.data-dir | path join "vendor/autoload")
+intelli-shell init nushell | save -f ($nu.data-dir | path join "vendor/autoload/intelli-shell.nu")
