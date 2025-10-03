@@ -1021,7 +1021,7 @@ def --env aws-login [
             AWS_SESSION_TOKEN: $temp_creds.SessionToken
             AWS_PROFILE: $profile
         }
-        print $"✅ Temporary credentials loaded (expires: ($temp_creds.Expiration))"
+        print $"✅ Temporary credentials loaded \\(expires: ($temp_creds.Expiration)\\)"
     } else {
         # Parse regular credentials from export-credentials
         let cred_pairs = ($creds_result.stdout
