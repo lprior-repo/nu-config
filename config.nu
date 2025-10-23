@@ -1500,15 +1500,6 @@ source ~/.cache/zoxide/init.nu
 
 # Load custom completions
 source ~/.config/nushell/completions/aws-completions.nu
-source ~/.config/nushell/completions/bat-completions.nu
-source ~/.config/nushell/completions/gh-completions.nu
-source ~/.config/nushell/completions/git-completions.nu
-source ~/.config/nushell/completions/make-completions.nu
-source ~/.config/nushell/completions/npm-completions.nu
-source ~/.config/nushell/completions/rg-completions.nu
-source ~/.config/nushell/completions/uv-completions.nu
-source ~/.config/nushell/completions/zellij-completions.nu
-source ~/.config/nushell/completions/zoxide-completions.nu
 
 # Load git aliases
 source ~/.config/nushell/git-aliases.nu
@@ -1519,14 +1510,9 @@ source ~/.config/nushell/zoxide-menu.nu
 # Load jc module
 use ~/.config/nushell/modules/jc.nu *
 
-# Auto-start zellij if not already in a zellij session
-if $env.ZELLIJ? == null {
-    zellij
-}
-
 # IntelliShell
-$env.INTELLI_HOME = "/home/family/.local/share/intelli-shell"
-$env.PATH = ($env.PATH | prepend "/home/family/.local/share/intelli-shell/bin")
+$env.INTELLI_HOME = "/home/lewis/.local/share/intelli-shell"
+$env.PATH = ($env.PATH | prepend "/home/lewis/.local/share/intelli-shell/bin")
 # $env.INTELLI_SEARCH_HOTKEY = "control space"
 # $env.INTELLI_VARIABLE_HOTKEY = "control char_l"
 # $env.INTELLI_BOOKMARK_HOTKEY = "control char_b"
