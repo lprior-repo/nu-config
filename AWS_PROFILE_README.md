@@ -429,13 +429,37 @@ $env.AWS_DEFAULT_REGION = "us-east-1"
 
 ## Testing
 
+The module includes a comprehensive pure-Nushell test suite with 20 test cases across 8 suites.
+
+### Run All Tests
+
+```nushell
+# Run the complete test suite
+nu tests/test-aws-profile.nu
+
+# Expected output: All 20 tests passing
+```
+
+### Test Coverage
+
+- ✅ Credential parsing from KEY=VALUE format
+- ✅ Profile discovery from AWS config files
+- ✅ String operations (trim, substring, contains)
+- ✅ Record building and manipulation
+- ✅ Null-safe operations with `get -i`
+- ✅ Pipeline transformations
+- ✅ Error handling with `complete`
+- ✅ Nushell 0.108+ syntax validation
+
+See `TEST_RESULTS.md` for detailed test documentation.
+
 ### Manual Testing
 
 ```nushell
 # Test profile listing
 aws-profiles
 
-# Test login (dry run - check output)
+# Test login
 aws-login default
 
 # Verify environment variables
@@ -447,17 +471,6 @@ aws sts get-caller-identity
 # Test cleanup
 aws-logout
 $env | where ($it.name | str starts-with "AWS")  # Should be empty
-```
-
-### Syntax Validation
-
-```nushell
-# Parse the script (check for syntax errors)
-nu --commands "use ~/.config/nushell/aws-profile.nu"
-
-# Check exported functions
-use ~/.config/nushell/aws-profile.nu *
-help aws-login
 ```
 
 ## Migration from Old System
